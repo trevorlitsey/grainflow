@@ -57,19 +57,6 @@ const WithdrawalBreakdownChart = ({
     );
   }
 
-  const getTaxRate = (accountType: string): number => {
-    switch (accountType) {
-      case "IRA":
-        return 0.22; // 22% tax rate
-      case "Roth IRA":
-        return 0; // No taxes
-      case "Brokerage":
-        return 0.15; // 15% capital gains
-      default:
-        return 0;
-    }
-  };
-
   // Calculate withdrawal breakdown by account
   const withdrawalData = allProjections.map((projection) => {
     const dataPoint: WithdrawalDataPoint = {
@@ -84,9 +71,9 @@ const WithdrawalBreakdownChart = ({
     accounts.forEach((account) => {
       const withdrawalAmount = projection.accountWithdrawals[account.id] || 0;
       dataPoint[`${account.name}_withdrawal`] = Math.round(withdrawalAmount);
-      dataPoint[`${account.name}_tax`] = Math.round(
-        withdrawalAmount * getTaxRate(account.type)
-      );
+      // Note: Individual account taxes are not available in the projection
+      // The totalTaxes field contains the correct total taxes for the year
+      dataPoint[`${account.name}_tax`] = 0; // We'll show total taxes in tooltip instead
     });
 
     return dataPoint;
@@ -123,7 +110,6 @@ const WithdrawalBreakdownChart = ({
               </p>
               {accounts.map((account) => {
                 const withdrawal = data[`${account.name}_withdrawal`] || 0;
-                const tax = data[`${account.name}_tax`] || 0;
                 return (
                   <div key={account.id} className="text-xs">
                     <span style={{ color: account.color }}>●</span>{" "}
@@ -131,11 +117,6 @@ const WithdrawalBreakdownChart = ({
                       {account.name}:
                     </span>{" "}
                     {formatCurrency(withdrawal)}
-                    {tax > 0 && (
-                      <span className="text-red-500 ml-1">
-                        (tax: {formatCurrency(tax)})
-                      </span>
-                    )}
                   </div>
                 );
               })}
