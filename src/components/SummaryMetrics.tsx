@@ -125,9 +125,9 @@ const SummaryMetrics = ({ projections, data }: SummaryMetricsProps) => {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Total Taxes Paid:</span>
-              <span className="font-medium text-red-600">
-                {formatCurrency(totalTaxes)}
+              <span className="text-gray-600">Yearly Income (4% rule):</span>
+              <span className="font-medium">
+                {formatCurrency(retirementProjection?.withdrawals || 0)}
               </span>
             </div>
           </div>
@@ -154,9 +154,7 @@ const SummaryMetrics = ({ projections, data }: SummaryMetricsProps) => {
             <div className="flex justify-between">
               <span className="text-gray-600">Monthly Income (4% rule):</span>
               <span className="font-medium">
-                {formatCurrency(
-                  ((retirementProjection?.totalBalance || 0) * 0.04) / 12
-                )}
+                {formatCurrency((retirementProjection?.withdrawals || 0) / 12)}
               </span>
             </div>
           </div>
