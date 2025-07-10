@@ -46,7 +46,7 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
               handleInputChange("retirementAge", parseInt(e.target.value) || 0)
             }
             className="input-field"
-            min="40"
+            min={data.currentAge + 1 || 40}
             max="80"
           />
         </div>
