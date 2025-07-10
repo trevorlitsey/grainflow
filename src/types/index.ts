@@ -1,11 +1,18 @@
 export type AccountType = "IRA" | "Roth IRA" | "Brokerage";
 
+export interface ContributionPlan {
+  id: string;
+  yearlyAmount: number;
+  startAge: number;
+  endAge: number;
+}
+
 export interface Account {
   id: string;
   type: AccountType;
   name: string;
   startingAmount: number;
-  yearlyContribution: number;
+  contributionPlans: ContributionPlan[];
   color: string;
 }
 

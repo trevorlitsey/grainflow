@@ -1,23 +1,25 @@
 import { useState } from "react";
-import { Plus, Trash2, Edit3, Save, X } from "lucide-react";
-import type { Account, AccountType } from "../types";
+import { Plus, Trash2, Edit3, Save, X, Calendar } from "lucide-react";
+import type { Account, AccountType, ContributionPlan } from "../types";
 import { ACCOUNT_COLORS } from "../types";
 
 interface AccountManagerProps {
   accounts: Account[];
   onAccountsChange: (accounts: Account[]) => void;
+  retirementAge: number;
 }
 
 const AccountManager = ({
   accounts,
   onAccountsChange,
+  retirementAge,
 }: AccountManagerProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newAccount, setNewAccount] = useState<Partial<Account>>({
     type: "IRA",
     name: "",
     startingAmount: 0,
-    yearlyContribution: 0,
+    contributionPlans: [],
   });
 
   const handleAddAccount = () => {
@@ -28,7 +30,7 @@ const AccountManager = ({
       type: newAccount.type as AccountType,
       name: newAccount.name,
       startingAmount: newAccount.startingAmount || 0,
-      yearlyContribution: newAccount.yearlyContribution || 0,
+      contributionPlans: newAccount.contributionPlans || [],
       color: ACCOUNT_COLORS[newAccount.type as AccountType],
     };
 
@@ -37,7 +39,7 @@ const AccountManager = ({
       type: "IRA",
       name: "",
       startingAmount: 0,
-      yearlyContribution: 0,
+      contributionPlans: [],
     });
   };
 
@@ -73,62 +75,69 @@ const AccountManager = ({
           Add New Account
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <select
-            value={newAccount.type}
-            onChange={(e) =>
-              setNewAccount({
-                ...newAccount,
-                type: e.target.value as AccountType,
-              })
-            }
-            className="input-field"
-          >
-            <option value="IRA">Traditional IRA</option>
-            <option value="Roth IRA">Roth IRA</option>
-            <option value="Brokerage">Brokerage</option>
-          </select>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Account Type
+            </label>
+            <select
+              value={newAccount.type}
+              onChange={(e) =>
+                setNewAccount({
+                  ...newAccount,
+                  type: e.target.value as AccountType,
+                })
+              }
+              className="input-field"
+            >
+              <option value="IRA">Traditional IRA</option>
+              <option value="Roth IRA">Roth IRA</option>
+              <option value="Brokerage">Brokerage</option>
+            </select>
+          </div>
 
-          <input
-            type="text"
-            placeholder="Account Name"
-            value={newAccount.name}
-            onChange={(e) =>
-              setNewAccount({ ...newAccount, name: e.target.value })
-            }
-            className="input-field"
-          />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Account Name
+            </label>
+            <input
+              type="text"
+              placeholder="e.g., My 401k"
+              value={newAccount.name}
+              onChange={(e) =>
+                setNewAccount({ ...newAccount, name: e.target.value })
+              }
+              className="input-field"
+            />
+          </div>
 
-          <input
-            type="number"
-            placeholder="Starting Amount"
-            value={newAccount.startingAmount}
-            onChange={(e) =>
-              setNewAccount({
-                ...newAccount,
-                startingAmount: parseFloat(e.target.value) || 0,
-              })
-            }
-            className="input-field"
-          />
-
-          <input
-            type="number"
-            placeholder="Yearly Contribution"
-            value={newAccount.yearlyContribution}
-            onChange={(e) =>
-              setNewAccount({
-                ...newAccount,
-                yearlyContribution: parseFloat(e.target.value) || 0,
-              })
-            }
-            className="input-field"
-          />
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Starting Amount
+            </label>
+            <input
+              type="number"
+              placeholder="0"
+              value={newAccount.startingAmount}
+              onChange={(e) =>
+                setNewAccount({
+                  ...newAccount,
+                  startingAmount: parseFloat(e.target.value) || 0,
+                })
+              }
+              className="input-field"
+            />
+          </div>
         </div>
 
-        <button onClick={handleAddAccount} className="btn-primary mt-3 w-full">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Account
-        </button>
+        <div className="flex justify-center mt-3">
+          <button
+            onClick={handleAddAccount}
+            className="btn-primary flex items-center"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Add Account
+          </button>
+        </div>
       </div>
 
       {/* Existing Accounts */}
@@ -140,6 +149,7 @@ const AccountManager = ({
                 account={account}
                 onSave={handleSaveEdit}
                 onCancel={handleCancelEdit}
+                retirementAge={retirementAge}
               />
             ) : (
               <div className="flex items-center justify-between">
@@ -161,7 +171,22 @@ const AccountManager = ({
                     ${account.startingAmount.toLocaleString()}
                   </p>
                   <p className="text-xs text-gray-600">
-                    +${account.yearlyContribution.toLocaleString()}/year
+                    {account.contributionPlans.length > 0 ? (
+                      <span>
+                        {account.contributionPlans.map((plan, index) => (
+                          <span key={plan.id}>
+                            {index > 0 && " + "}$
+                            {plan.yearlyAmount.toLocaleString()}/year
+                            <br />
+                            <span className="text-gray-500">
+                              (ages {plan.startAge}-{plan.endAge})
+                            </span>
+                          </span>
+                        ))}
+                      </span>
+                    ) : (
+                      "No contributions planned"
+                    )}
                   </p>
                 </div>
 
@@ -201,12 +226,14 @@ interface EditAccountFormProps {
   account: Account;
   onSave: (account: Account) => void;
   onCancel: () => void;
+  retirementAge: number;
 }
 
 const EditAccountForm = ({
   account,
   onSave,
   onCancel,
+  retirementAge,
 }: EditAccountFormProps) => {
   const [editedAccount, setEditedAccount] = useState<Account>(account);
 
@@ -214,11 +241,46 @@ const EditAccountForm = ({
     onSave(editedAccount);
   };
 
+  const addContributionPlan = () => {
+    const newPlan: ContributionPlan = {
+      id: Date.now().toString(),
+      yearlyAmount: 0,
+      startAge: 30,
+      endAge: retirementAge,
+    };
+    setEditedAccount({
+      ...editedAccount,
+      contributionPlans: [...editedAccount.contributionPlans, newPlan],
+    });
+  };
+
+  const updateContributionPlan = (
+    planId: string,
+    updates: Partial<ContributionPlan>
+  ) => {
+    setEditedAccount({
+      ...editedAccount,
+      contributionPlans: editedAccount.contributionPlans.map((plan) =>
+        plan.id === planId ? { ...plan, ...updates } : plan
+      ),
+    });
+  };
+
+  const removeContributionPlan = (planId: string) => {
+    setEditedAccount({
+      ...editedAccount,
+      contributionPlans: editedAccount.contributionPlans.filter(
+        (plan) => plan.id !== planId
+      ),
+    });
+  };
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <input
           type="text"
+          placeholder="Account Name"
           value={editedAccount.name}
           onChange={(e) =>
             setEditedAccount({ ...editedAccount, name: e.target.value })
@@ -228,6 +290,7 @@ const EditAccountForm = ({
 
         <input
           type="number"
+          placeholder="Starting Amount"
           value={editedAccount.startingAmount}
           onChange={(e) =>
             setEditedAccount({
@@ -237,26 +300,114 @@ const EditAccountForm = ({
           }
           className="input-field"
         />
+      </div>
 
-        <input
-          type="number"
-          value={editedAccount.yearlyContribution}
-          onChange={(e) =>
-            setEditedAccount({
-              ...editedAccount,
-              yearlyContribution: parseFloat(e.target.value) || 0,
-            })
-          }
-          className="input-field"
-        />
+      {/* Contribution Plans */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            Contribution Plans
+          </h4>
+          <button
+            onClick={addContributionPlan}
+            className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
+          >
+            <Plus className="w-3 h-3" />
+            Add Plan
+          </button>
+        </div>
+
+        {editedAccount.contributionPlans.map((plan) => (
+          <div key={plan.id} className="bg-gray-50 rounded-lg p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">
+                Contribution Plan
+              </span>
+              <button
+                onClick={() => removeContributionPlan(plan.id)}
+                className="text-red-500 hover:text-red-700"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Yearly Amount
+                </label>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={plan.yearlyAmount}
+                  onChange={(e) =>
+                    updateContributionPlan(plan.id, {
+                      yearlyAmount: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  className="input-field text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Start Age
+                </label>
+                <input
+                  type="number"
+                  placeholder="30"
+                  value={plan.startAge}
+                  onChange={(e) =>
+                    updateContributionPlan(plan.id, {
+                      startAge: parseInt(e.target.value) || 0,
+                    })
+                  }
+                  className="input-field text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  End Age
+                </label>
+                <input
+                  type="number"
+                  placeholder="65"
+                  value={plan.endAge}
+                  onChange={(e) =>
+                    updateContributionPlan(plan.id, {
+                      endAge: parseInt(e.target.value) || retirementAge,
+                    })
+                  }
+                  className="input-field text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="text-xs text-gray-600">
+              ${plan.yearlyAmount.toLocaleString()}/year from age{" "}
+              {plan.startAge} to {plan.endAge}
+            </div>
+          </div>
+        ))}
+
+        {editedAccount.contributionPlans.length === 0 && (
+          <div className="text-center py-4 text-gray-500 text-sm">
+            No contribution plans. Click "Add Plan" to create one.
+          </div>
+        )}
       </div>
 
       <div className="flex gap-2">
-        <button onClick={handleSave} className="btn-primary flex-1">
+        <button
+          onClick={handleSave}
+          className="btn-primary flex-1 flex items-center"
+        >
           <Save className="w-4 h-4 mr-2" />
           Save
         </button>
-        <button onClick={onCancel} className="btn-secondary">
+        <button onClick={onCancel} className="btn-secondary flex items-center">
           <X className="w-4 h-4 mr-2" />
           Cancel
         </button>

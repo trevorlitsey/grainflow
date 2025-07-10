@@ -43,6 +43,7 @@ function App() {
               onAccountsChange={(accounts: Account[]) =>
                 updateRetirementData({ accounts })
               }
+              retirementAge={retirementData.retirementAge}
             />
           </div>
 

@@ -140,14 +140,18 @@ export const calculateYearlyProjections = (
           calculateCompoundInterest(currentBalance, data.expectedReturn, 1) -
           withdrawalAmount;
       } else {
-        // During working years, contribute to accounts
+        // During working years, contribute to accounts based on contribution plans
+        const currentYearlyContribution = account.contributionPlans
+          .filter((plan) => age >= plan.startAge && age <= plan.endAge)
+          .reduce((sum, plan) => sum + plan.yearlyAmount, 0);
+
         newBalance = calculateCompoundInterest(
           currentBalance,
           data.expectedReturn,
           1,
-          account.yearlyContribution
+          currentYearlyContribution
         );
-        totalContributions += account.yearlyContribution;
+        totalContributions += currentYearlyContribution;
       }
 
       newAccountBalances[account.id] = Math.max(0, newBalance);
