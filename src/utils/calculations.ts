@@ -45,7 +45,6 @@ export const calculateYearlyProjections = (
     // Calculate total withdrawal amount first
     let totalWithdrawalNeeded = 0;
     if (isRetired) {
-      const withdrawalRate = 0.04; // 4% rule
       // Calculate total balance before withdrawals (including growth)
       const totalBalanceBeforeWithdrawals = Object.values(
         accountBalances
@@ -54,10 +53,24 @@ export const calculateYearlyProjections = (
           sum + calculateCompoundInterest(balance, data.expectedReturn, 1),
         0
       );
-      totalWithdrawalNeeded = totalBalanceBeforeWithdrawals * withdrawalRate;
+      // Check for global withdrawal plan for this year
+      let planWithdrawal = null;
+      if (data.withdrawalPlans && data.withdrawalPlans.length > 0) {
+        const activePlan = data.withdrawalPlans.find(
+          (p) => age >= p.startAge && age <= p.endAge
+        );
+        if (activePlan) {
+          planWithdrawal =
+            (activePlan.percentage / 100) * totalBalanceBeforeWithdrawals;
+        }
+      }
+      totalWithdrawalNeeded =
+        planWithdrawal !== null
+          ? planWithdrawal
+          : totalBalanceBeforeWithdrawals * 0.04;
     }
 
-    // Calculate withdrawals first to ensure they add up to 4%
+    // Calculate withdrawals first to ensure they add up to 4% or custom plan
     const withdrawalAmounts: Record<string, number> = {};
     let totalWithdrawalsCalculated = 0;
 
@@ -72,7 +85,7 @@ export const calculateYearlyProjections = (
         );
       });
 
-      // Distribute withdrawals according to priority order
+      // Always use the totalWithdrawalNeeded (from plan or 4% rule)
       let remainingWithdrawal = totalWithdrawalNeeded;
 
       // First, withdraw from brokerage accounts

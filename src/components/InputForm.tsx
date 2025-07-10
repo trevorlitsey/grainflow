@@ -166,6 +166,134 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
           </label>
         </div>
       </div>
+
+      {/* Withdrawal Plans */}
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+          Withdrawal Plans (Portfolio-wide)
+        </h3>
+        <div className="space-y-3">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <span className="text-sm font-medium text-gray-700 flex items-center gap-2">
+              Set custom withdrawal percentages for any age range. If no plan is
+              active, the default 4% rule applies.
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const newPlan = {
+                  id:
+                    Date.now().toString() + Math.random().toString(36).slice(2),
+                  percentage: 4,
+                  startAge: data.retirementAge,
+                  endAge: data.lifeExpectancy,
+                };
+                onUpdate({
+                  withdrawalPlans: [...(data.withdrawalPlans || []), newPlan],
+                });
+              }}
+              className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1 whitespace-nowrap"
+            >
+              + Add Plan
+            </button>
+          </div>
+          {(data.withdrawalPlans || []).map((plan, idx) => (
+            <div key={plan.id} className="bg-gray-50 rounded-lg p-3">
+              <div className="mb-2 text-sm font-medium text-gray-700">
+                Withdrawal Plan {idx + 1}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-2 items-end">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Withdrawal %
+                  </label>
+                  <input
+                    type="number"
+                    placeholder="4"
+                    min="0"
+                    max="100"
+                    value={plan.percentage}
+                    onChange={(e) => {
+                      const updated = (data.withdrawalPlans || []).map((p) =>
+                        p.id === plan.id
+                          ? {
+                              ...p,
+                              percentage: parseFloat(e.target.value) || 0,
+                            }
+                          : p
+                      );
+                      onUpdate({ withdrawalPlans: updated });
+                    }}
+                    className="input-field text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    Start Age
+                  </label>
+                  <input
+                    type="number"
+                    placeholder={data.retirementAge.toString()}
+                    value={plan.startAge}
+                    onChange={(e) => {
+                      const updated = (data.withdrawalPlans || []).map((p) =>
+                        p.id === plan.id
+                          ? { ...p, startAge: parseInt(e.target.value) || 0 }
+                          : p
+                      );
+                      onUpdate({ withdrawalPlans: updated });
+                    }}
+                    className="input-field text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                    End Age
+                  </label>
+                  <input
+                    type="number"
+                    placeholder={data.lifeExpectancy.toString()}
+                    value={plan.endAge}
+                    onChange={(e) => {
+                      const updated = (data.withdrawalPlans || []).map((p) =>
+                        p.id === plan.id
+                          ? {
+                              ...p,
+                              endAge:
+                                parseInt(e.target.value) || data.lifeExpectancy,
+                            }
+                          : p
+                      );
+                      onUpdate({ withdrawalPlans: updated });
+                    }}
+                    className="input-field text-sm"
+                  />
+                </div>
+                <div className="flex md:justify-center mt-4 md:mt-0">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onUpdate({
+                        withdrawalPlans: (data.withdrawalPlans || []).filter(
+                          (p) => p.id !== plan.id
+                        ),
+                      })
+                    }
+                    className="btn-secondary text-red-500 hover:text-red-700 w-full"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+          {(data.withdrawalPlans || []).length === 0 && (
+            <div className="text-center py-4 text-gray-500 text-sm">
+              No withdrawal plans. Click "Add Plan" to create one.
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

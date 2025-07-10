@@ -125,9 +125,19 @@ const SummaryMetrics = ({ projections, data }: SummaryMetricsProps) => {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Yearly Income (4% rule):</span>
+              <span className="text-gray-600">
+                Yearly Income at Start of Retirement:
+              </span>
               <span className="font-medium">
                 {formatCurrency(retirementProjection?.withdrawals || 0)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">
+                Yearly Income at End of Retirement:
+              </span>
+              <span className="font-medium">
+                {formatCurrency(endProjection?.withdrawals || 0)}
               </span>
             </div>
           </div>
@@ -152,9 +162,19 @@ const SummaryMetrics = ({ projections, data }: SummaryMetricsProps) => {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Monthly Income (4% rule):</span>
+              <span className="text-gray-600">
+                Monthly Income at Start of Retirement:
+              </span>
               <span className="font-medium">
                 {formatCurrency((retirementProjection?.withdrawals || 0) / 12)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">
+                Monthly Income at End of Retirement:
+              </span>
+              <span className="font-medium">
+                {formatCurrency((endProjection?.withdrawals || 0) / 12)}
               </span>
             </div>
           </div>

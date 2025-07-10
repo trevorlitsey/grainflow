@@ -7,6 +7,13 @@ export interface ContributionPlan {
   endAge: number;
 }
 
+export interface WithdrawalPlan {
+  id: string;
+  percentage: number; // e.g., 4 for 4%
+  startAge: number;
+  endAge: number;
+}
+
 export interface Account {
   id: string;
   type: AccountType;
@@ -26,6 +33,7 @@ export interface RetirementData {
   taxRate: number;
   capitalGainsRate: number;
   allowEarlyIRAWithdrawals?: boolean;
+  withdrawalPlans?: WithdrawalPlan[];
 }
 
 export interface YearlyProjection {
@@ -70,4 +78,5 @@ export const DEFAULT_RETIREMENT_DATA: RetirementData = {
   taxRate: 22,
   capitalGainsRate: 15,
   allowEarlyIRAWithdrawals: false,
+  withdrawalPlans: [],
 };
