@@ -1,4 +1,4 @@
-# RetireSmart
+# GrainFlow
 
 A sleek, modern, and cute retirement savings and spending calculator built with React, TypeScript, Vite, and Tailwind CSS.
 
@@ -40,4 +40,4 @@ A sleek, modern, and cute retirement savings and spending calculator built with 
 
 ---
 
-**RetireSmart** — Plan your dream retirement, smarter!
+**GrainFlow** — Plan your dream retirement, smarter!
