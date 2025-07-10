@@ -150,6 +150,21 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
             step="0.5"
           />
         </div>
+        <div>
+          <label className="inline-flex items-center mt-2">
+            <input
+              type="checkbox"
+              checked={!!data.allowEarlyIRAWithdrawals}
+              onChange={(e) =>
+                onUpdate({ allowEarlyIRAWithdrawals: e.target.checked })
+              }
+              className="form-checkbox h-4 w-4 text-primary-600"
+            />
+            <span className="ml-2 text-sm text-gray-700">
+              Allow early IRA/Roth IRA withdrawals (10% penalty before age 59½)
+            </span>
+          </label>
+        </div>
       </div>
     </div>
   );

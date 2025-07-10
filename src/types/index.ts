@@ -25,6 +25,7 @@ export interface RetirementData {
   inflationRate: number;
   taxRate: number;
   capitalGainsRate: number;
+  allowEarlyIRAWithdrawals?: boolean;
 }
 
 export interface YearlyProjection {
@@ -68,4 +69,5 @@ export const DEFAULT_RETIREMENT_DATA: RetirementData = {
   inflationRate: 2.5,
   taxRate: 22,
   capitalGainsRate: 15,
+  allowEarlyIRAWithdrawals: false,
 };

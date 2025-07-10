@@ -92,8 +92,11 @@ export const calculateYearlyProjections = (
         remainingWithdrawal -= withdrawalAmount;
       }
 
-      // Then, withdraw from IRA accounts (after 59.5)
-      if (age >= 59.5 && remainingWithdrawal > 0) {
+      // Then, withdraw from IRA accounts
+      if (
+        (age >= 59.5 || data.allowEarlyIRAWithdrawals) &&
+        remainingWithdrawal > 0
+      ) {
         const iraAccounts = data.accounts.filter((acc) => acc.type === "IRA");
         for (const account of iraAccounts) {
           if (remainingWithdrawal <= 0) break;
@@ -109,8 +112,11 @@ export const calculateYearlyProjections = (
         }
       }
 
-      // Finally, withdraw from Roth IRA accounts (after 59.5)
-      if (age >= 59.5 && remainingWithdrawal > 0) {
+      // Finally, withdraw from Roth IRA accounts
+      if (
+        (age >= 59.5 || data.allowEarlyIRAWithdrawals) &&
+        remainingWithdrawal > 0
+      ) {
         const rothAccounts = data.accounts.filter(
           (acc) => acc.type === "Roth IRA"
         );
@@ -197,6 +203,9 @@ const calculateTaxes = (
   const iraWithdrawals = data.accounts
     .filter((acc) => acc.type === "IRA")
     .reduce((sum, acc) => sum + (accountWithdrawals[acc.id] || 0), 0);
+  const rothWithdrawals = data.accounts
+    .filter((acc) => acc.type === "Roth IRA")
+    .reduce((sum, acc) => sum + (accountWithdrawals[acc.id] || 0), 0);
   const brokerageWithdrawals = data.accounts
     .filter((acc) => acc.type === "Brokerage")
     .reduce((sum, acc) => sum + (accountWithdrawals[acc.id] || 0), 0);
@@ -205,10 +214,21 @@ const calculateTaxes = (
   if (brokerageWithdrawals > 0) {
     totalTax += brokerageWithdrawals * (data.capitalGainsRate / 100);
   }
-  if (age >= 59.5 && iraWithdrawals > 0) {
-    totalTax += iraWithdrawals * (data.taxRate / 100);
+  if (iraWithdrawals > 0) {
+    if (age < 59.5 && data.allowEarlyIRAWithdrawals) {
+      // Early IRA withdrawal: 10% penalty + regular tax
+      totalTax += iraWithdrawals * (0.1 + data.taxRate / 100);
+    } else if (age >= 59.5) {
+      totalTax += iraWithdrawals * (data.taxRate / 100);
+    }
   }
-  // Roth IRA withdrawals are tax-free
+  if (rothWithdrawals > 0) {
+    if (age < 59.5 && data.allowEarlyIRAWithdrawals) {
+      // Early Roth IRA withdrawal: 10% penalty only
+      totalTax += rothWithdrawals * 0.1;
+    }
+    // No tax for Roth IRA after 59.5
+  }
 
   return totalTax;
 };
