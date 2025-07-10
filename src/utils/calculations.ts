@@ -1,5 +1,4 @@
 import type { RetirementData, YearlyProjection, ChartData } from "../types";
-import type { Account } from "../types";
 
 export const calculateCompoundInterest = (
   principal: number,
@@ -43,22 +42,103 @@ export const calculateYearlyProjections = (
     let totalContributions = 0;
     let totalWithdrawals = 0;
 
+    // Calculate total withdrawal amount first
+    let totalWithdrawalNeeded = 0;
+    if (isRetired) {
+      const withdrawalRate = 0.04; // 4% rule
+      // Calculate total balance before withdrawals (including growth)
+      const totalBalanceBeforeWithdrawals = Object.values(
+        accountBalances
+      ).reduce(
+        (sum, balance) =>
+          sum + calculateCompoundInterest(balance, data.expectedReturn, 1),
+        0
+      );
+      totalWithdrawalNeeded = totalBalanceBeforeWithdrawals * withdrawalRate;
+    }
+
+    // Calculate withdrawals first to ensure they add up to 4%
+    const withdrawalAmounts: Record<string, number> = {};
+    let totalWithdrawalsCalculated = 0;
+
+    if (isRetired) {
+      // Calculate total balance before withdrawals (including growth)
+      const balancesBeforeGrowth: Record<string, number> = {};
+      data.accounts.forEach((account) => {
+        balancesBeforeGrowth[account.id] = calculateCompoundInterest(
+          accountBalances[account.id],
+          data.expectedReturn,
+          1
+        );
+      });
+
+      // Distribute withdrawals according to priority order
+      let remainingWithdrawal = totalWithdrawalNeeded;
+
+      // First, withdraw from brokerage accounts
+      const brokerageAccounts = data.accounts.filter(
+        (acc) => acc.type === "Brokerage"
+      );
+      for (const account of brokerageAccounts) {
+        if (remainingWithdrawal <= 0) break;
+
+        const availableBalance = balancesBeforeGrowth[account.id];
+        const withdrawalAmount = Math.min(
+          availableBalance,
+          remainingWithdrawal
+        );
+        withdrawalAmounts[account.id] = withdrawalAmount;
+        totalWithdrawalsCalculated += withdrawalAmount;
+        remainingWithdrawal -= withdrawalAmount;
+      }
+
+      // Then, withdraw from IRA accounts (after 59.5)
+      if (age >= 59.5 && remainingWithdrawal > 0) {
+        const iraAccounts = data.accounts.filter((acc) => acc.type === "IRA");
+        for (const account of iraAccounts) {
+          if (remainingWithdrawal <= 0) break;
+
+          const availableBalance = balancesBeforeGrowth[account.id];
+          const withdrawalAmount = Math.min(
+            availableBalance,
+            remainingWithdrawal
+          );
+          withdrawalAmounts[account.id] = withdrawalAmount;
+          totalWithdrawalsCalculated += withdrawalAmount;
+          remainingWithdrawal -= withdrawalAmount;
+        }
+      }
+
+      // Finally, withdraw from Roth IRA accounts (after 59.5)
+      if (age >= 59.5 && remainingWithdrawal > 0) {
+        const rothAccounts = data.accounts.filter(
+          (acc) => acc.type === "Roth IRA"
+        );
+        for (const account of rothAccounts) {
+          if (remainingWithdrawal <= 0) break;
+
+          const availableBalance = balancesBeforeGrowth[account.id];
+          const withdrawalAmount = Math.min(
+            availableBalance,
+            remainingWithdrawal
+          );
+          withdrawalAmounts[account.id] = withdrawalAmount;
+          totalWithdrawalsCalculated += withdrawalAmount;
+          remainingWithdrawal -= withdrawalAmount;
+        }
+      }
+    }
+
+    // Now apply the withdrawals and calculate new balances
     data.accounts.forEach((account) => {
       const currentBalance = accountBalances[account.id];
       let newBalance: number;
 
       if (isRetired) {
-        // During retirement, withdraw from accounts
-        const withdrawalAmount = calculateWithdrawalAmount(
-          data,
-          account,
-          currentBalance,
-          age
-        );
+        const withdrawalAmount = withdrawalAmounts[account.id] || 0;
         newBalance =
           calculateCompoundInterest(currentBalance, data.expectedReturn, 1) -
           withdrawalAmount;
-        totalWithdrawals += withdrawalAmount;
       } else {
         // During working years, contribute to accounts
         newBalance = calculateCompoundInterest(
@@ -74,13 +154,16 @@ export const calculateYearlyProjections = (
       totalBalance += newAccountBalances[account.id];
     });
 
+    totalWithdrawals = totalWithdrawalsCalculated;
+
     // Calculate taxes
     const taxes = calculateTaxes(
       data,
       newAccountBalances,
       totalWithdrawals,
       isRetired,
-      age
+      age,
+      accountBalances
     );
     const netIncome = totalWithdrawals - taxes;
 
@@ -89,6 +172,7 @@ export const calculateYearlyProjections = (
       age,
       totalBalance,
       accountBalances: { ...newAccountBalances },
+      accountWithdrawals: { ...withdrawalAmounts },
       contributions: totalContributions,
       withdrawals: totalWithdrawals,
       taxes,
@@ -102,68 +186,83 @@ export const calculateYearlyProjections = (
   return projections;
 };
 
-const calculateWithdrawalAmount = (
-  data: RetirementData,
-  account: Account,
-  balance: number,
-  age: number
-): number => {
-  // Simple 4% rule for retirement withdrawals
-  const totalBalance = data.accounts.reduce((sum, acc) => {
-    return sum + (acc.id === account.id ? balance : 0);
-  }, 0);
-
-  const withdrawalRate = 0.04; // 4% rule
-  const baseWithdrawal = totalBalance * withdrawalRate;
-
-  // Check if account can be withdrawn from based on age
-  if (age < 59.5) {
-    if (account.type === "IRA" || account.type === "Roth IRA") {
-      // Early withdrawal penalty: 10% + regular taxes
-      return 0; // Don't withdraw from IRA/Roth IRA before 59.5
-    }
-  }
-
-  return baseWithdrawal;
-};
-
 const calculateTaxes = (
   data: RetirementData,
   accountBalances: Record<string, number>,
   totalWithdrawals: number,
   isRetired: boolean,
-  age: number
+  age: number,
+  previousBalances: Record<string, number>
 ): number => {
   if (!isRetired) return 0;
 
   let totalTax = 0;
+  let remainingWithdrawal = totalWithdrawals;
 
-  data.accounts.forEach((account) => {
-    const balance = accountBalances[account.id];
-    const withdrawalAmount =
-      totalWithdrawals *
-      (balance / Object.values(accountBalances).reduce((a, b) => a + b, 0));
+  // Calculate taxes based on the withdrawal priority order
+  const brokerageAccounts = data.accounts.filter(
+    (acc) => acc.type === "Brokerage"
+  );
+  const iraAccounts = data.accounts.filter((acc) => acc.type === "IRA");
+  const rothAccounts = data.accounts.filter((acc) => acc.type === "Roth IRA");
 
-    // Check age restrictions for IRA/Roth IRA accounts
-    if (age < 59.5 && (account.type === "IRA" || account.type === "Roth IRA")) {
-      return; // Skip tax calculation for restricted accounts
+  // First, calculate taxes from brokerage withdrawals
+  for (const brokerageAccount of brokerageAccounts) {
+    if (remainingWithdrawal <= 0) break;
+
+    const previousBalance = previousBalances[brokerageAccount.id] || 0;
+    const currentBalance = accountBalances[brokerageAccount.id] || 0;
+    const withdrawalAmount = Math.min(
+      previousBalance - currentBalance,
+      remainingWithdrawal
+    );
+
+    if (withdrawalAmount > 0) {
+      // Brokerage accounts are subject to capital gains tax
+      totalTax += withdrawalAmount * (data.capitalGainsRate / 100);
+      remainingWithdrawal -= withdrawalAmount;
     }
+  }
 
-    switch (account.type) {
-      case "IRA":
+  // Then, calculate taxes from IRA withdrawals (after 59.5)
+  if (age >= 59.5 && remainingWithdrawal > 0) {
+    for (const iraAccount of iraAccounts) {
+      if (remainingWithdrawal <= 0) break;
+
+      const previousBalance = previousBalances[iraAccount.id] || 0;
+      const currentBalance = accountBalances[iraAccount.id] || 0;
+      const withdrawalAmount = Math.min(
+        previousBalance - currentBalance,
+        remainingWithdrawal
+      );
+
+      if (withdrawalAmount > 0) {
         // Traditional IRA withdrawals are taxed as ordinary income
         totalTax += withdrawalAmount * (data.taxRate / 100);
-        break;
-      case "Roth IRA":
+        remainingWithdrawal -= withdrawalAmount;
+      }
+    }
+  }
+
+  // Finally, calculate taxes from Roth IRA withdrawals (after 59.5)
+  if (age >= 59.5 && remainingWithdrawal > 0) {
+    for (const rothAccount of rothAccounts) {
+      if (remainingWithdrawal <= 0) break;
+
+      const previousBalance = previousBalances[rothAccount.id] || 0;
+      const currentBalance = accountBalances[rothAccount.id] || 0;
+      const withdrawalAmount = Math.min(
+        previousBalance - currentBalance,
+        remainingWithdrawal
+      );
+
+      if (withdrawalAmount > 0) {
         // Roth IRA withdrawals are tax-free
         totalTax += 0;
-        break;
-      case "Brokerage":
-        // Brokerage accounts are subject to capital gains tax
-        totalTax += withdrawalAmount * (data.capitalGainsRate / 100);
-        break;
+        remainingWithdrawal -= withdrawalAmount;
+      }
     }
-  });
+  }
 
   return totalTax;
 };

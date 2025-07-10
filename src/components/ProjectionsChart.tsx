@@ -1,4 +1,5 @@
 import {
+  LineChart,
   Line,
   XAxis,
   YAxis,
@@ -6,8 +7,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  AreaChart,
-  Area,
 } from "recharts";
 import type { YearlyProjection } from "../types";
 import { formatCurrency } from "../utils/calculations";
@@ -39,7 +38,19 @@ const ProjectionsChart = ({ projections }: ProjectionsChartProps) => {
     netIncome: Math.round(projection.netIncome),
   }));
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: Array<{
+      payload: Record<string, number>;
+      value: number;
+      dataKey: string;
+    }>;
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -90,7 +101,7 @@ const ProjectionsChart = ({ projections }: ProjectionsChartProps) => {
 
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
+          <LineChart
             data={chartData}
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
@@ -109,14 +120,14 @@ const ProjectionsChart = ({ projections }: ProjectionsChartProps) => {
             <Tooltip content={<CustomTooltip />} />
             <Legend />
 
-            {/* Total Balance Area */}
-            <Area
+            {/* Total Balance Line */}
+            <Line
               type="monotone"
               dataKey="totalBalance"
               stroke="#3b82f6"
-              fill="#3b82f6"
-              fillOpacity={0.3}
+              strokeWidth={3}
               name="Total Balance"
+              dot={false}
             />
 
             {/* Contributions Line */}
@@ -125,8 +136,8 @@ const ProjectionsChart = ({ projections }: ProjectionsChartProps) => {
               dataKey="contributions"
               stroke="#10b981"
               strokeWidth={2}
-              dot={false}
               name="Contributions"
+              dot={false}
             />
 
             {/* Withdrawals Line */}
@@ -135,20 +146,10 @@ const ProjectionsChart = ({ projections }: ProjectionsChartProps) => {
               dataKey="withdrawals"
               stroke="#f59e0b"
               strokeWidth={2}
-              dot={false}
               name="Withdrawals"
-            />
-
-            {/* Taxes Line */}
-            <Line
-              type="monotone"
-              dataKey="taxes"
-              stroke="#ef4444"
-              strokeWidth={2}
               dot={false}
-              name="Taxes"
             />
-          </AreaChart>
+          </LineChart>
         </ResponsiveContainer>
       </div>
 

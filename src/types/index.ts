@@ -25,6 +25,7 @@ export interface YearlyProjection {
   age: number;
   totalBalance: number;
   accountBalances: Record<string, number>;
+  accountWithdrawals: Record<string, number>;
   contributions: number;
   withdrawals: number;
   taxes: number;

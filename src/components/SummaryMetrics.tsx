@@ -24,7 +24,6 @@ const SummaryMetrics = ({ projections, data }: SummaryMetricsProps) => {
   const retirementYear = currentYear + (data.retirementAge - data.currentAge);
 
   // Find key projections
-  const currentProjection = projections[0];
   const retirementProjection = projections.find(
     (p) => p.age === data.retirementAge
   );
@@ -48,10 +47,16 @@ const SummaryMetrics = ({ projections, data }: SummaryMetricsProps) => {
     .filter((p) => p.age >= data.retirementAge)
     .reduce((sum, p) => sum + p.taxes, 0);
 
+  // Calculate current total from starting amounts
+  const currentTotal = data.accounts.reduce(
+    (sum, account) => sum + account.startingAmount,
+    0
+  );
+
   const metrics = [
     {
       label: "Current Total",
-      value: formatCurrency(currentProjection?.totalBalance || 0),
+      value: formatCurrency(currentTotal),
       icon: DollarSign,
       color: "text-primary-600",
       bgColor: "bg-primary-50",

@@ -17,6 +17,15 @@ interface WithdrawalBreakdownChartProps {
   accounts: Account[];
 }
 
+interface WithdrawalDataPoint {
+  year: number;
+  age: number;
+  totalWithdrawal: number;
+  totalTaxes: number;
+  netIncome: number;
+  [key: string]: number; // For dynamic account withdrawal and tax properties
+}
+
 const WithdrawalBreakdownChart = ({
   projections,
   accounts,
@@ -34,17 +43,15 @@ const WithdrawalBreakdownChart = ({
     );
   }
 
-  // Filter to only retirement years (where withdrawals > 0)
-  const retirementProjections = projections.filter((p) => p.withdrawals > 0);
+  // Use all projections, including years with zero withdrawals
+  const allProjections = projections;
 
-  if (retirementProjections.length === 0) {
+  if (allProjections.length === 0) {
     return (
       <div className="card">
         <div className="text-center py-8 text-gray-500">
-          <p>No retirement withdrawals yet.</p>
-          <p className="text-sm">
-            Set your retirement age to see withdrawal breakdown!
-          </p>
+          <p>No projection data available.</p>
+          <p className="text-sm">Add accounts to see withdrawal breakdown!</p>
         </div>
       </div>
     );
@@ -64,8 +71,8 @@ const WithdrawalBreakdownChart = ({
   };
 
   // Calculate withdrawal breakdown by account
-  const withdrawalData = retirementProjections.map((projection) => {
-    const dataPoint: Record<string, any> = {
+  const withdrawalData = allProjections.map((projection) => {
+    const dataPoint: WithdrawalDataPoint = {
       year: projection.year,
       age: projection.age,
       totalWithdrawal: Math.round(projection.withdrawals),
@@ -73,36 +80,27 @@ const WithdrawalBreakdownChart = ({
       netIncome: Math.round(projection.netIncome),
     };
 
-    // Calculate withdrawal from each account based on its proportion of total balance
-    const totalBalance = Object.values(projection.accountBalances).reduce(
-      (sum, balance) => sum + balance,
-      0
-    );
-
+    // Use the actual withdrawal amounts from the projection
     accounts.forEach((account) => {
-      const accountBalance = projection.accountBalances[account.id] || 0;
-      const withdrawalProportion =
-        totalBalance > 0 ? accountBalance / totalBalance : 0;
-      let accountWithdrawal = projection.withdrawals * withdrawalProportion;
-
-      // Check age restrictions for IRA/Roth IRA accounts
-      if (
-        projection.age < 59.5 &&
-        (account.type === "IRA" || account.type === "Roth IRA")
-      ) {
-        accountWithdrawal = 0; // No withdrawals from IRA/Roth IRA before 59.5
-      }
-
-      dataPoint[`${account.name}_withdrawal`] = Math.round(accountWithdrawal);
+      const withdrawalAmount = projection.accountWithdrawals[account.id] || 0;
+      dataPoint[`${account.name}_withdrawal`] = Math.round(withdrawalAmount);
       dataPoint[`${account.name}_tax`] = Math.round(
-        accountWithdrawal * getTaxRate(account.type)
+        withdrawalAmount * getTaxRate(account.type)
       );
     });
 
     return dataPoint;
   });
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: Array<{ payload: WithdrawalDataPoint }>;
+    label?: string;
+  }) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
@@ -192,9 +190,9 @@ const WithdrawalBreakdownChart = ({
       <div className="mt-4 text-sm text-gray-600">
         <p className="text-center">
           This chart shows which accounts your retirement withdrawals come from.
-          The stacked bars represent the total withdrawal amount, with each
-          account's contribution color-coded. Tax implications are shown in the
-          tooltip.
+          Before age 59½, only brokerage accounts can withdraw. After 59½,
+          withdrawals follow this order: brokerage to zero, then IRA, then Roth
+          IRA. Tax implications are shown in the tooltip.
         </p>
       </div>
     </div>

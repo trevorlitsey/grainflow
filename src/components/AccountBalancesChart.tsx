@@ -1,6 +1,6 @@
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -79,7 +79,7 @@ const AccountBalancesChart = ({
 
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart
+          <BarChart
             data={chartData}
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
@@ -99,17 +99,15 @@ const AccountBalancesChart = ({
             <Legend />
 
             {accounts.map((account) => (
-              <Line
+              <Bar
                 key={account.id}
-                type="monotone"
                 dataKey={account.name}
-                stroke={account.color}
-                strokeWidth={3}
-                dot={false}
+                fill={account.color}
                 name={`${account.name} (${account.type})`}
+                stackId="balances"
               />
             ))}
-          </LineChart>
+          </BarChart>
         </ResponsiveContainer>
       </div>
 
