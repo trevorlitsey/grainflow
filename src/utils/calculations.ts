@@ -161,14 +161,7 @@ export const calculateYearlyProjections = (
     totalWithdrawals = totalWithdrawalsCalculated;
 
     // Calculate taxes
-    const taxes = calculateTaxes(
-      data,
-      newAccountBalances,
-      totalWithdrawals,
-      isRetired,
-      age,
-      accountBalances
-    );
+    const taxes = calculateTaxes(data, withdrawalAmounts, isRetired, age);
     const netIncome = totalWithdrawals - taxes;
 
     projections.push({
@@ -192,81 +185,30 @@ export const calculateYearlyProjections = (
 
 const calculateTaxes = (
   data: RetirementData,
-  accountBalances: Record<string, number>,
-  totalWithdrawals: number,
+  accountWithdrawals: Record<string, number>,
   isRetired: boolean,
-  age: number,
-  previousBalances: Record<string, number>
+  age: number
 ): number => {
   if (!isRetired) return 0;
 
   let totalTax = 0;
-  let remainingWithdrawal = totalWithdrawals;
 
-  // Calculate taxes based on the withdrawal priority order
-  const brokerageAccounts = data.accounts.filter(
-    (acc) => acc.type === "Brokerage"
-  );
-  const iraAccounts = data.accounts.filter((acc) => acc.type === "IRA");
-  const rothAccounts = data.accounts.filter((acc) => acc.type === "Roth IRA");
+  // Sum withdrawals by account type
+  const iraWithdrawals = data.accounts
+    .filter((acc) => acc.type === "IRA")
+    .reduce((sum, acc) => sum + (accountWithdrawals[acc.id] || 0), 0);
+  const brokerageWithdrawals = data.accounts
+    .filter((acc) => acc.type === "Brokerage")
+    .reduce((sum, acc) => sum + (accountWithdrawals[acc.id] || 0), 0);
 
-  // First, calculate taxes from brokerage withdrawals
-  for (const brokerageAccount of brokerageAccounts) {
-    if (remainingWithdrawal <= 0) break;
-
-    const previousBalance = previousBalances[brokerageAccount.id] || 0;
-    const currentBalance = accountBalances[brokerageAccount.id] || 0;
-    const withdrawalAmount = Math.min(
-      previousBalance - currentBalance,
-      remainingWithdrawal
-    );
-
-    if (withdrawalAmount > 0) {
-      // Brokerage accounts are subject to capital gains tax
-      totalTax += withdrawalAmount * (data.capitalGainsRate / 100);
-      remainingWithdrawal -= withdrawalAmount;
-    }
+  // Apply taxes
+  if (brokerageWithdrawals > 0) {
+    totalTax += brokerageWithdrawals * (data.capitalGainsRate / 100);
   }
-
-  // Then, calculate taxes from IRA withdrawals (after 59.5)
-  if (age >= 59.5 && remainingWithdrawal > 0) {
-    for (const iraAccount of iraAccounts) {
-      if (remainingWithdrawal <= 0) break;
-
-      const previousBalance = previousBalances[iraAccount.id] || 0;
-      const currentBalance = accountBalances[iraAccount.id] || 0;
-      const withdrawalAmount = Math.min(
-        previousBalance - currentBalance,
-        remainingWithdrawal
-      );
-
-      if (withdrawalAmount > 0) {
-        // Traditional IRA withdrawals are taxed as ordinary income
-        totalTax += withdrawalAmount * (data.taxRate / 100);
-        remainingWithdrawal -= withdrawalAmount;
-      }
-    }
+  if (age >= 59.5 && iraWithdrawals > 0) {
+    totalTax += iraWithdrawals * (data.taxRate / 100);
   }
-
-  // Finally, calculate taxes from Roth IRA withdrawals (after 59.5)
-  if (age >= 59.5 && remainingWithdrawal > 0) {
-    for (const rothAccount of rothAccounts) {
-      if (remainingWithdrawal <= 0) break;
-
-      const previousBalance = previousBalances[rothAccount.id] || 0;
-      const currentBalance = accountBalances[rothAccount.id] || 0;
-      const withdrawalAmount = Math.min(
-        previousBalance - currentBalance,
-        remainingWithdrawal
-      );
-
-      if (withdrawalAmount > 0) {
-        // Roth IRA withdrawals are tax-free
-        totalTax += 0;
-        remainingWithdrawal -= withdrawalAmount;
-      }
-    }
-  }
+  // Roth IRA withdrawals are tax-free
 
   return totalTax;
 };

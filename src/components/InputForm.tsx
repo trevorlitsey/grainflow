@@ -90,7 +90,7 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
             className="input-field"
             min="0"
             max="20"
-            step="0.1"
+            step="0.5"
           />
         </div>
 
@@ -110,7 +110,7 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
             className="input-field"
             min="0"
             max="10"
-            step="0.1"
+            step="0.5"
           />
         </div>
 
@@ -127,7 +127,7 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
             className="input-field"
             min="0"
             max="50"
-            step="0.1"
+            step="0.5"
           />
         </div>
 
@@ -147,7 +147,7 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
             className="input-field"
             min="0"
             max="30"
-            step="0.1"
+            step="0.5"
           />
         </div>
       </div>
