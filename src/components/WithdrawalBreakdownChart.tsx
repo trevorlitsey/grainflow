@@ -164,6 +164,12 @@ const WithdrawalBreakdownChart = ({
                 stackId="withdrawals"
               />
             ))}
+            <Bar
+              dataKey="totalTaxes"
+              fill="#DC2626"
+              name="Total Taxes"
+              stackId="withdrawals"
+            />
           </BarChart>
         </ResponsiveContainer>
       </div>
