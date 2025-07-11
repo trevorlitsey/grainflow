@@ -32,6 +32,12 @@ export const calculateYearlyProjections = (
     accountBalances[account.id] = account.startingAmount;
   });
 
+  // Track original contributions for capital gains calculation
+  const originalContributions: Record<string, number> = {};
+  data.accounts.forEach((account) => {
+    originalContributions[account.id] = account.startingAmount;
+  });
+
   for (let year = 0; year <= totalYears; year++) {
     const age = data.currentAge + year;
     const isRetired = age >= data.retirementAge;
@@ -170,6 +176,8 @@ export const calculateYearlyProjections = (
           1,
           currentYearlyContribution
         );
+        // Update original contributions for capital gains tracking
+        originalContributions[account.id] += currentYearlyContribution;
         totalContributions += currentYearlyContribution;
       }
 
@@ -180,7 +188,14 @@ export const calculateYearlyProjections = (
     totalWithdrawals = totalWithdrawalsCalculated;
 
     // Calculate taxes
-    const taxes = calculateTaxes(data, withdrawalAmounts, isRetired, age);
+    const taxes = calculateTaxes(
+      data,
+      withdrawalAmounts,
+      originalContributions,
+      accountBalances,
+      isRetired,
+      age
+    );
     const netIncome = totalWithdrawals - taxes;
 
     projections.push({
@@ -205,6 +220,8 @@ export const calculateYearlyProjections = (
 const calculateTaxes = (
   data: RetirementData,
   accountWithdrawals: Record<string, number>,
+  originalContributions: Record<string, number>,
+  accountBalances: Record<string, number>,
   isRetired: boolean,
   age: number
 ): number => {
@@ -225,7 +242,26 @@ const calculateTaxes = (
 
   // Apply taxes
   if (brokerageWithdrawals > 0) {
-    totalTax += brokerageWithdrawals * (data.capitalGainsRate / 100);
+    // Calculate capital gains tax only on the gains portion
+    let totalBrokerageGains = 0;
+    data.accounts
+      .filter((acc) => acc.type === "Brokerage")
+      .forEach((account) => {
+        const withdrawal = accountWithdrawals[account.id] || 0;
+        if (withdrawal > 0) {
+          const currentBalance = accountBalances[account.id];
+          const originalContribution = originalContributions[account.id];
+
+          // Calculate what portion of the withdrawal represents gains
+          const totalGains = currentBalance - originalContribution;
+          const gainsRatio = totalGains > 0 ? totalGains / currentBalance : 0;
+          const gainsInWithdrawal = withdrawal * gainsRatio;
+
+          totalBrokerageGains += gainsInWithdrawal;
+        }
+      });
+
+    totalTax += totalBrokerageGains * (data.capitalGainsRate / 100);
   }
   if (iraWithdrawals > 0) {
     if (age < 59.5 && data.allowEarlyIRAWithdrawals) {
