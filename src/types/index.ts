@@ -27,6 +27,7 @@ export interface RetirementData {
   currentAge: number;
   retirementAge: number;
   lifeExpectancy: number;
+  currentMonthlySpending: number;
   accounts: Account[];
   expectedReturn: number;
   inflationRate: number;
@@ -72,6 +73,7 @@ export const DEFAULT_RETIREMENT_DATA: RetirementData = {
   currentAge: 30,
   retirementAge: 65,
   lifeExpectancy: 90,
+  currentMonthlySpending: 3000,
   accounts: [],
   expectedReturn: 7,
   inflationRate: 2.5,

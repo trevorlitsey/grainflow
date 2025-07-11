@@ -66,6 +66,25 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
             max="120"
           />
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Current Monthly Spending
+          </label>
+          <input
+            type="number"
+            value={data.currentMonthlySpending}
+            onChange={(e) =>
+              handleInputChange(
+                "currentMonthlySpending",
+                parseFloat(e.target.value) || 0
+              )
+            }
+            className="input-field"
+            min="0"
+            step="100"
+          />
+        </div>
       </div>
 
       <h2 className="text-xl font-semibold text-gray-800 mb-6 mt-8 flex items-center gap-2">

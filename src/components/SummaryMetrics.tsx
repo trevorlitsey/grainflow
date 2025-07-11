@@ -1,4 +1,4 @@
-import { DollarSign, Calendar, TrendingUp, Target } from "lucide-react";
+import { DollarSign, Target, ArrowUp, ArrowDown } from "lucide-react";
 import type { RetirementData } from "../types";
 import type { YearlyProjection } from "../types";
 import { formatCurrency } from "../utils/calculations";
@@ -42,11 +42,6 @@ const SummaryMetrics = ({ projections, data }: SummaryMetricsProps) => {
     .filter((p) => p.age >= data.retirementAge)
     .reduce((sum, p) => sum + p.withdrawals, 0);
 
-  // Calculate total taxes
-  const totalTaxes = projections
-    .filter((p) => p.age >= data.retirementAge)
-    .reduce((sum, p) => sum + p.taxes, 0);
-
   // Calculate current total from starting amounts
   const currentTotal = data.accounts.reduce(
     (sum, account) => sum + account.startingAmount,
@@ -69,18 +64,18 @@ const SummaryMetrics = ({ projections, data }: SummaryMetricsProps) => {
       bgColor: "bg-success-50",
     },
     {
-      label: "Peak Balance",
-      value: formatCurrency(maxProjection?.totalBalance || 0),
-      icon: TrendingUp,
-      color: "text-warning-600",
-      bgColor: "bg-warning-50",
+      label: "Total Contributions",
+      value: formatCurrency(totalContributions),
+      icon: ArrowUp,
+      color: "text-green-600",
+      bgColor: "bg-green-50",
     },
     {
-      label: "Years to Retirement",
-      value: `${data.retirementAge - data.currentAge}`,
-      icon: Calendar,
-      color: "text-indigo-600",
-      bgColor: "bg-indigo-50",
+      label: "Total Withdrawals",
+      value: formatCurrency(totalWithdrawals),
+      icon: ArrowDown,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
     },
   ];
 
@@ -103,79 +98,151 @@ const SummaryMetrics = ({ projections, data }: SummaryMetricsProps) => {
 
       {/* Detailed Summary */}
       <div className="card">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+        <h3 className="text-lg font-semibold text-gray-800 mb-6">
           Retirement Summary
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Retirement Year:</span>
-              <span className="font-medium">{retirementYear}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Total Contributions:</span>
-              <span className="font-medium">
-                {formatCurrency(totalContributions)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Total Withdrawals:</span>
-              <span className="font-medium">
-                {formatCurrency(totalWithdrawals)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">
-                Yearly Income at Start of Retirement:
-              </span>
-              <span className="font-medium">
-                {formatCurrency(retirementProjection?.withdrawals || 0)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">
-                Yearly Income at End of Retirement:
-              </span>
-              <span className="font-medium">
-                {formatCurrency(endProjection?.withdrawals || 0)}
-              </span>
+        <div className="space-y-8">
+          {/* Timeline */}
+          <div>
+            <h4 className="text-md font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
+              Timeline
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex justify-between items-center py-2">
+                <span className="text-gray-600">Retirement Year:</span>
+                <span className="font-semibold text-gray-800">
+                  {retirementYear}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-gray-600">Retirement Duration:</span>
+                <span className="font-semibold text-gray-800">
+                  {data.lifeExpectancy - data.retirementAge} years
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-gray-600">Net Retirement Income:</span>
-              <span className="font-medium text-success-600">
-                {formatCurrency(totalWithdrawals - totalTaxes)}
-              </span>
+          {/* Balances */}
+          <div>
+            <h4 className="text-md font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
+              Key Balances
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex justify-between items-center py-2">
+                <span className="text-gray-600">Peak Balance:</span>
+                <span className="font-semibold text-gray-800">
+                  {formatCurrency(maxProjection?.totalBalance || 0)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-gray-600">Final Balance:</span>
+                <span className="font-semibold text-gray-800">
+                  {formatCurrency(endProjection?.totalBalance || 0)}
+                </span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Final Balance:</span>
-              <span className="font-medium">
-                {formatCurrency(endProjection?.totalBalance || 0)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">Retirement Duration:</span>
-              <span className="font-medium">
-                {data.lifeExpectancy - data.retirementAge} years
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">
-                Monthly Income at Start of Retirement:
-              </span>
-              <span className="font-medium">
-                {formatCurrency((retirementProjection?.withdrawals || 0) / 12)}
-              </span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">
-                Monthly Income at End of Retirement:
-              </span>
-              <span className="font-medium">
-                {formatCurrency((endProjection?.withdrawals || 0) / 12)}
-              </span>
+          </div>
+
+          {/* Income & Spending */}
+          <div>
+            <h4 className="text-md font-semibold text-gray-700 mb-3 pb-2 border-b border-gray-200">
+              Income & Spending
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Start of Retirement */}
+              <div className="space-y-3">
+                <h5 className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                  At Start of Retirement
+                </h5>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-gray-600">Yearly Income:</span>
+                    <span className="font-medium text-green-600">
+                      {formatCurrency(retirementProjection?.withdrawals || 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-gray-600">Yearly Spending:</span>
+                    <span className="font-medium text-orange-600">
+                      {formatCurrency(
+                        12 *
+                          data.currentMonthlySpending *
+                          Math.pow(
+                            1 + data.inflationRate / 100,
+                            data.retirementAge - data.currentAge
+                          )
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-gray-600">Monthly Income:</span>
+                    <span className="font-medium text-green-600">
+                      {formatCurrency(
+                        (retirementProjection?.withdrawals || 0) / 12
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-gray-600">Monthly Spending:</span>
+                    <span className="font-medium text-orange-600">
+                      {formatCurrency(
+                        data.currentMonthlySpending *
+                          Math.pow(
+                            1 + data.inflationRate / 100,
+                            data.retirementAge - data.currentAge
+                          )
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* End of Retirement */}
+              <div className="space-y-3">
+                <h5 className="text-sm font-medium text-gray-600 uppercase tracking-wide">
+                  At End of Retirement
+                </h5>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-gray-600">Yearly Income:</span>
+                    <span className="font-medium text-green-600">
+                      {formatCurrency(endProjection?.withdrawals || 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-gray-600">Yearly Spending:</span>
+                    <span className="font-medium text-orange-600">
+                      {formatCurrency(
+                        12 *
+                          data.currentMonthlySpending *
+                          Math.pow(
+                            1 + data.inflationRate / 100,
+                            data.lifeExpectancy - data.currentAge
+                          )
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-gray-600">Monthly Income:</span>
+                    <span className="font-medium text-green-600">
+                      {formatCurrency((endProjection?.withdrawals || 0) / 12)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-gray-600">Monthly Spending:</span>
+                    <span className="font-medium text-orange-600">
+                      {formatCurrency(
+                        data.currentMonthlySpending *
+                          Math.pow(
+                            1 + data.inflationRate / 100,
+                            data.lifeExpectancy - data.currentAge
+                          )
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
