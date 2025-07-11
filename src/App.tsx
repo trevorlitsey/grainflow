@@ -8,6 +8,7 @@ import ProjectionsChart from "./components/ProjectionsChart";
 import AccountBalancesChart from "./components/AccountBalancesChart";
 import WithdrawalBreakdownChart from "./components/WithdrawalBreakdownChart";
 import SummaryMetrics from "./components/SummaryMetrics";
+import ContributionsByAccountChart from "./components/ContributionsByAccountChart";
 import { calculateYearlyProjections } from "./utils/calculations";
 
 function App() {
@@ -59,6 +60,7 @@ function App() {
               projections={projections}
               accounts={retirementData.accounts}
             />
+            <ContributionsByAccountChart data={retirementData} />
           </div>
         </div>
       </div>
