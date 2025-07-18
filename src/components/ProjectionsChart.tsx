@@ -55,8 +55,8 @@ const ProjectionsChart = ({ projections }: ProjectionsChartProps) => {
       const data = payload[0].payload;
       return (
         <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-800">Year: {label}</p>
-          <p className="text-sm text-gray-600">Age: {data.age}</p>
+          <p className="font-medium text-gray-800">Age: {data.age}</p>
+          <p className="text-sm text-gray-600">Year: {data.year}</p>
           <div className="space-y-1 mt-2">
             <p className="text-sm">
               <span className="text-blue-600">Total Balance:</span>{" "}
@@ -107,7 +107,7 @@ const ProjectionsChart = ({ projections }: ProjectionsChartProps) => {
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis
-              dataKey="year"
+              dataKey="age"
               stroke="#6b7280"
               fontSize={12}
               tickFormatter={(value) => value.toString()}
