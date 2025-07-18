@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Plus, Trash2, Edit3, Save, X, Calendar } from "lucide-react";
-import type { Account, AccountType, ContributionPlan } from "../types";
+import { useState, useEffect } from "react";
+import { Landmark, Plus, Trash2, Edit3, Save, X, Calendar } from "lucide-react";
+import type { Account, ContributionPlan } from "../types";
 import { ACCOUNT_COLORS } from "../types";
 
 interface AccountManagerProps {
@@ -9,46 +9,46 @@ interface AccountManagerProps {
   retirementAge: number;
 }
 
+const DEFAULT_ACCOUNTS: Account[] = [
+  {
+    id: "ira",
+    type: "IRA",
+    name: "Tax Deferred",
+    startingAmount: 0,
+    contributionPlans: [],
+    color: ACCOUNT_COLORS["IRA"],
+  },
+  {
+    id: "roth",
+    type: "Roth IRA",
+    name: "Tax Free",
+    startingAmount: 0,
+    contributionPlans: [],
+    color: ACCOUNT_COLORS["Roth IRA"],
+  },
+  {
+    id: "brokerage",
+    type: "Brokerage",
+    name: "Taxable",
+    startingAmount: 0,
+    contributionPlans: [],
+    color: ACCOUNT_COLORS["Brokerage"],
+  },
+];
+
 const AccountManager = ({
   accounts,
   onAccountsChange,
   retirementAge,
 }: AccountManagerProps) => {
+  // Ensure all three accounts always exist
+  useEffect(() => {
+    if (!accounts || accounts.length !== 3) {
+      onAccountsChange(DEFAULT_ACCOUNTS);
+    }
+  }, [accounts, onAccountsChange]);
+
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [newAccount, setNewAccount] = useState<Partial<Account>>({
-    type: "IRA",
-    name: "",
-    startingAmount: 0,
-    contributionPlans: [],
-  });
-  const [startingAmountInput, setStartingAmountInput] = useState<string>("0");
-
-  const handleAddAccount = () => {
-    if (!newAccount.name || !newAccount.type) return;
-
-    const account: Account = {
-      id: Date.now().toString(),
-      type: newAccount.type as AccountType,
-      name: newAccount.name,
-      startingAmount:
-        startingAmountInput === "" ? 0 : parseFloat(startingAmountInput),
-      contributionPlans: newAccount.contributionPlans || [],
-      color: ACCOUNT_COLORS[newAccount.type as AccountType],
-    };
-
-    onAccountsChange([...accounts, account]);
-    setNewAccount({
-      type: "IRA",
-      name: "",
-      startingAmount: 0,
-      contributionPlans: [],
-    });
-    setStartingAmountInput("0");
-  };
-
-  const handleDeleteAccount = (id: string) => {
-    onAccountsChange(accounts.filter((acc) => acc.id !== id));
-  };
 
   const handleEditAccount = (account: Account) => {
     setEditingId(account.id);
@@ -68,79 +68,10 @@ const AccountManager = ({
   return (
     <div className="card">
       <h2 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-        <Plus className="w-5 h-5 text-primary-600" />
+        <Landmark className="w-5 h-5 text-primary-600" />
         Manage Accounts
       </h2>
-
-      {/* Add New Account */}
-      <div className="bg-gray-50 rounded-lg p-4 mb-6">
-        <h3 className="text-sm font-medium text-gray-700 mb-3">
-          Add New Account
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Account Type
-            </label>
-            <select
-              value={newAccount.type}
-              onChange={(e) =>
-                setNewAccount({
-                  ...newAccount,
-                  type: e.target.value as AccountType,
-                })
-              }
-              className="input-field"
-            >
-              <option value="IRA">Traditional IRA</option>
-              <option value="Roth IRA">Roth IRA</option>
-              <option value="Brokerage">Brokerage</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Account Name
-            </label>
-            <input
-              type="text"
-              placeholder="e.g., My 401k"
-              value={newAccount.name}
-              onChange={(e) =>
-                setNewAccount({ ...newAccount, name: e.target.value })
-              }
-              className="input-field"
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Starting Amount
-            </label>
-            <input
-              type="number"
-              placeholder="0"
-              value={startingAmountInput}
-              onChange={(e) => setStartingAmountInput(e.target.value)}
-              onBlur={() => {
-                if (startingAmountInput === "") setStartingAmountInput("0");
-              }}
-              className="input-field"
-            />
-          </div>
-        </div>
-
-        <div className="flex justify-center mt-3">
-          <button
-            onClick={handleAddAccount}
-            className="btn-primary flex items-center"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Account
-          </button>
-        </div>
-      </div>
-
+      {/* No Add New Account UI */}
       {/* Existing Accounts */}
       <div className="space-y-3">
         {accounts.map((account) => (
@@ -163,10 +94,13 @@ const AccountManager = ({
                     <h4 className="font-medium text-gray-800">
                       {account.name}
                     </h4>
-                    <p className="text-sm text-gray-600">{account.type}</p>
+                    <p className="text-sm text-gray-600">
+                      {account.type === "IRA" && "Tax Deferred"}
+                      {account.type === "Roth IRA" && "Tax Free"}
+                      {account.type === "Brokerage" && "Taxable"}
+                    </p>
                   </div>
                 </div>
-
                 <div className="text-right">
                   <p className="text-sm font-medium text-gray-800">
                     ${account.startingAmount.toLocaleString()}
@@ -190,7 +124,6 @@ const AccountManager = ({
                     )}
                   </p>
                 </div>
-
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEditAccount(account)}
@@ -198,26 +131,12 @@ const AccountManager = ({
                   >
                     <Edit3 className="w-4 h-4" />
                   </button>
-                  <button
-                    onClick={() => handleDeleteAccount(account.id)}
-                    className="p-2 text-gray-500 hover:text-red-600 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {/* No Delete Button */}
                 </div>
               </div>
             )}
           </div>
         ))}
-
-        {accounts.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <p>No accounts added yet.</p>
-            <p className="text-sm">
-              Add your first account above to get started!
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -286,7 +205,13 @@ const EditAccountForm = ({
   };
 
   return (
-    <div className="space-y-4">
+    <form
+      className="space-y-4"
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSave();
+      }}
+    >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <input
           type="text"
@@ -408,10 +333,7 @@ const EditAccountForm = ({
       </div>
 
       <div className="flex gap-2">
-        <button
-          onClick={handleSave}
-          className="btn-primary flex-1 flex items-center"
-        >
+        <button type="submit" className="btn-primary flex-1 flex items-center">
           <Save className="w-4 h-4 mr-2" />
           Save
         </button>
@@ -420,7 +342,7 @@ const EditAccountForm = ({
           Cancel
         </button>
       </div>
-    </div>
+    </form>
   );
 };
 
