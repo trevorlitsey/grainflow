@@ -71,6 +71,28 @@ const AccountManager = ({
         <Landmark className="w-5 h-5 text-primary-600" />
         Manage Accounts
       </h2>
+      <div className="mb-8">
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex flex-col gap-4 shadow-sm">
+          <div>
+            <div className="font-semibold text-gray-800">Tax Deferred</div>
+            <div className="text-gray-600 text-sm">
+              e.g., Traditional IRA, 401k
+            </div>
+          </div>
+          <div>
+            <div className="font-semibold text-gray-800">Tax Free</div>
+            <div className="text-gray-600 text-sm">
+              e.g., Roth IRA, Roth 401k
+            </div>
+          </div>
+          <div>
+            <div className="font-semibold text-gray-800">Taxable</div>
+            <div className="text-gray-600 text-sm">
+              e.g., Brokerage, Joint, Trust
+            </div>
+          </div>
+        </div>
+      </div>
       {/* No Add New Account UI */}
       {/* Existing Accounts */}
       <div className="space-y-3">
