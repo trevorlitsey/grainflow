@@ -21,6 +21,7 @@ const AccountManager = ({
     startingAmount: 0,
     contributionPlans: [],
   });
+  const [startingAmountInput, setStartingAmountInput] = useState<string>("0");
 
   const handleAddAccount = () => {
     if (!newAccount.name || !newAccount.type) return;
@@ -29,7 +30,8 @@ const AccountManager = ({
       id: Date.now().toString(),
       type: newAccount.type as AccountType,
       name: newAccount.name,
-      startingAmount: newAccount.startingAmount || 0,
+      startingAmount:
+        startingAmountInput === "" ? 0 : parseFloat(startingAmountInput),
       contributionPlans: newAccount.contributionPlans || [],
       color: ACCOUNT_COLORS[newAccount.type as AccountType],
     };
@@ -41,6 +43,7 @@ const AccountManager = ({
       startingAmount: 0,
       contributionPlans: [],
     });
+    setStartingAmountInput("0");
   };
 
   const handleDeleteAccount = (id: string) => {
@@ -117,13 +120,11 @@ const AccountManager = ({
             <input
               type="number"
               placeholder="0"
-              value={newAccount.startingAmount}
-              onChange={(e) =>
-                setNewAccount({
-                  ...newAccount,
-                  startingAmount: parseFloat(e.target.value) || 0,
-                })
-              }
+              value={startingAmountInput}
+              onChange={(e) => setStartingAmountInput(e.target.value)}
+              onBlur={() => {
+                if (startingAmountInput === "") setStartingAmountInput("0");
+              }}
               className="input-field"
             />
           </div>
@@ -236,9 +237,18 @@ const EditAccountForm = ({
   retirementAge,
 }: EditAccountFormProps) => {
   const [editedAccount, setEditedAccount] = useState<Account>(account);
+  const [startingAmountInput, setStartingAmountInput] = useState<string>(
+    account.startingAmount === undefined || account.startingAmount === null
+      ? "0"
+      : String(account.startingAmount)
+  );
 
   const handleSave = () => {
-    onSave(editedAccount);
+    onSave({
+      ...editedAccount,
+      startingAmount:
+        startingAmountInput === "" ? 0 : parseFloat(startingAmountInput),
+    });
   };
 
   const addContributionPlan = () => {
@@ -291,13 +301,11 @@ const EditAccountForm = ({
         <input
           type="number"
           placeholder="Starting Amount"
-          value={editedAccount.startingAmount}
-          onChange={(e) =>
-            setEditedAccount({
-              ...editedAccount,
-              startingAmount: parseFloat(e.target.value) || 0,
-            })
-          }
+          value={startingAmountInput}
+          onChange={(e) => setStartingAmountInput(e.target.value)}
+          onBlur={() => {
+            if (startingAmountInput === "") setStartingAmountInput("0");
+          }}
           className="input-field"
         />
       </div>

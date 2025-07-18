@@ -1,4 +1,5 @@
 import { PiggyBank, TrendingUp, Heart } from "lucide-react";
+import ScenarioManagerDropdown from "./ScenarioManagerDropdown";
 
 const Header = () => {
   return (
@@ -10,6 +11,9 @@ const Header = () => {
         <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 to-indigo-600 bg-clip-text text-transparent">
           GrainFlow
         </h1>
+      </div>
+      <div className="flex justify-center mb-2">
+        <ScenarioManagerDropdown />
       </div>
       <p className="text-lg text-gray-600 max-w-2xl mx-auto">
         Plan your retirement. Track your IRA, Roth IRA, and brokerage accounts

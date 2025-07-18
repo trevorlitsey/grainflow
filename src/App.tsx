@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import type { RetirementData, YearlyProjection, Account } from "./types";
-import { loadRetirementData, saveRetirementData } from "./utils/storage";
+import {
+  loadCurrentScenario,
+  saveScenario,
+  getCurrentScenarioId,
+  listScenarios,
+} from "./utils/storage";
+import { DEFAULT_RETIREMENT_DATA } from "./types";
 import Header from "./components/Header";
 import InputForm from "./components/InputForm";
 import AccountManager from "./components/AccountManager";
@@ -13,22 +19,34 @@ import { calculateYearlyProjections } from "./utils/calculations";
 
 function App() {
   const [retirementData, setRetirementData] = useState<RetirementData>(
-    loadRetirementData()
+    loadCurrentScenario() || DEFAULT_RETIREMENT_DATA
   );
   const [projections, setProjections] = useState<YearlyProjection[]>([]);
 
   useEffect(() => {
+    if (!retirementData) return;
     const newProjections = calculateYearlyProjections(retirementData);
     setProjections(newProjections);
   }, [retirementData]);
 
   useEffect(() => {
-    saveRetirementData(retirementData);
+    if (!retirementData) return;
+    // Save to the current scenario
+    const currentId = getCurrentScenarioId();
+    if (!currentId) return;
+    // Get the current scenario name
+    const scenario = listScenarios().find((s) => s.id === currentId);
+    const name = scenario ? scenario.name : "Scenario";
+    saveScenario(currentId, name, retirementData);
   }, [retirementData]);
 
   const updateRetirementData = (updates: Partial<RetirementData>) => {
     setRetirementData((prev) => ({ ...prev, ...updates }));
   };
+
+  if (!retirementData) {
+    return <div className="text-center py-8 text-gray-500">Loading...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -53,8 +71,8 @@ function App() {
             <SummaryMetrics projections={projections} data={retirementData} />
             <ProjectionsChart projections={projections} />
             <AccountBalancesChart
-              projections={projections}
               accounts={retirementData.accounts}
+              projections={projections}
             />
             <WithdrawalBreakdownChart
               projections={projections}

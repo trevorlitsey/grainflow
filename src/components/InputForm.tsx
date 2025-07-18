@@ -7,8 +7,9 @@ interface InputFormProps {
 }
 
 const InputForm = ({ data, onUpdate }: InputFormProps) => {
-  const handleInputChange = (field: keyof RetirementData, value: number) => {
-    onUpdate({ [field]: value });
+  // Accept string so we can handle empty input
+  const handleInputChange = (field: keyof RetirementData, value: string) => {
+    onUpdate({ [field]: value === "" ? "" : Number(value) });
   };
 
   return (
@@ -25,11 +26,13 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
           </label>
           <input
             type="number"
-            value={data.currentAge}
-            onChange={(e) =>
-              handleInputChange("currentAge", parseInt(e.target.value) || 0)
-            }
+            value={String(data.currentAge) === "" ? "" : data.currentAge}
+            onChange={(e) => handleInputChange("currentAge", e.target.value)}
             className="input-field"
+            onBlur={() => {
+              if (String(data.currentAge) === "")
+                handleInputChange("currentAge", "30");
+            }}
             min="18"
             max="100"
           />
@@ -41,10 +44,12 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
           </label>
           <input
             type="number"
-            value={data.retirementAge}
-            onChange={(e) =>
-              handleInputChange("retirementAge", parseInt(e.target.value) || 0)
-            }
+            value={String(data.retirementAge) === "" ? "" : data.retirementAge}
+            onChange={(e) => handleInputChange("retirementAge", e.target.value)}
+            onBlur={() => {
+              if (String(data.retirementAge) === "")
+                handleInputChange("retirementAge", "65");
+            }}
             className="input-field"
             min={data.currentAge + 1 || 40}
             max="80"
@@ -57,10 +62,16 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
           </label>
           <input
             type="number"
-            value={data.lifeExpectancy}
-            onChange={(e) =>
-              handleInputChange("lifeExpectancy", parseInt(e.target.value) || 0)
+            value={
+              String(data.lifeExpectancy) === "" ? "" : data.lifeExpectancy
             }
+            onChange={(e) =>
+              handleInputChange("lifeExpectancy", e.target.value)
+            }
+            onBlur={() => {
+              if (String(data.lifeExpectancy) === "")
+                handleInputChange("lifeExpectancy", "90");
+            }}
             className="input-field"
             min="60"
             max="120"
@@ -73,12 +84,13 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
           </label>
           <input
             type="number"
-            value={data.currentMonthlySpending}
+            value={
+              String(data.currentMonthlySpending) === ""
+                ? ""
+                : data.currentMonthlySpending
+            }
             onChange={(e) =>
-              handleInputChange(
-                "currentMonthlySpending",
-                parseFloat(e.target.value) || 0
-              )
+              handleInputChange("currentMonthlySpending", e.target.value)
             }
             className="input-field"
             min="0"
@@ -99,12 +111,11 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
           </label>
           <input
             type="number"
-            value={data.expectedReturn}
+            value={
+              String(data.expectedReturn) === "" ? "" : data.expectedReturn
+            }
             onChange={(e) =>
-              handleInputChange(
-                "expectedReturn",
-                parseFloat(e.target.value) || 0
-              )
+              handleInputChange("expectedReturn", e.target.value)
             }
             className="input-field"
             min="0"
@@ -119,13 +130,8 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
           </label>
           <input
             type="number"
-            value={data.inflationRate}
-            onChange={(e) =>
-              handleInputChange(
-                "inflationRate",
-                parseFloat(e.target.value) || 0
-              )
-            }
+            value={String(data.inflationRate) === "" ? "" : data.inflationRate}
+            onChange={(e) => handleInputChange("inflationRate", e.target.value)}
             className="input-field"
             min="0"
             max="10"
@@ -139,10 +145,8 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
           </label>
           <input
             type="number"
-            value={data.taxRate}
-            onChange={(e) =>
-              handleInputChange("taxRate", parseFloat(e.target.value) || 0)
-            }
+            value={String(data.taxRate) === "" ? "" : data.taxRate}
+            onChange={(e) => handleInputChange("taxRate", e.target.value)}
             className="input-field"
             min="0"
             max="50"
@@ -156,12 +160,11 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
           </label>
           <input
             type="number"
-            value={data.capitalGainsRate}
+            value={
+              String(data.capitalGainsRate) === "" ? "" : data.capitalGainsRate
+            }
             onChange={(e) =>
-              handleInputChange(
-                "capitalGainsRate",
-                parseFloat(e.target.value) || 0
-              )
+              handleInputChange("capitalGainsRate", e.target.value)
             }
             className="input-field"
             min="0"
@@ -231,7 +234,9 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
                     placeholder="4"
                     min="0"
                     max="100"
-                    value={plan.percentage}
+                    value={
+                      String(plan.percentage) === "" ? "" : plan.percentage
+                    }
                     onChange={(e) => {
                       const updated = (data.withdrawalPlans || []).map((p) =>
                         p.id === plan.id
@@ -253,7 +258,7 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
                   <input
                     type="number"
                     placeholder={data.retirementAge.toString()}
-                    value={plan.startAge}
+                    value={String(plan.startAge) === "" ? "" : plan.startAge}
                     onChange={(e) => {
                       const updated = (data.withdrawalPlans || []).map((p) =>
                         p.id === plan.id
@@ -272,7 +277,7 @@ const InputForm = ({ data, onUpdate }: InputFormProps) => {
                   <input
                     type="number"
                     placeholder={data.lifeExpectancy.toString()}
-                    value={plan.endAge}
+                    value={String(plan.endAge) === "" ? "" : plan.endAge}
                     onChange={(e) => {
                       const updated = (data.withdrawalPlans || []).map((p) =>
                         p.id === plan.id

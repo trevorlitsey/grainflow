@@ -57,7 +57,7 @@ const SummaryMetrics = ({ projections, data }: SummaryMetricsProps) => {
       bgColor: "bg-primary-50",
     },
     {
-      label: "Retirement Nest Egg",
+      label: "Total Investments at Start of Retirement",
       value: formatCurrency(retirementProjection?.totalBalance || 0),
       icon: Target,
       color: "text-success-600",
