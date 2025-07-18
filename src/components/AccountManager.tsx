@@ -243,6 +243,7 @@ const EditAccountForm = ({
             Contribution Plans
           </h4>
           <button
+            type="button"
             onClick={addContributionPlan}
             className="text-sm text-primary-600 hover:text-primary-700 flex items-center gap-1"
           >
