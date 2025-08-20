@@ -2,6 +2,8 @@
 
 A sleek, modern, and cute retirement savings and spending calculator built with React, TypeScript, Vite, and Tailwind CSS.
 
+https://grainflow.netlify.app/
+
 ## Features
 - **Three account types:** IRA, Roth IRA, and Brokerage
 - **Tax-aware projections:** Handles IRA withdrawal taxes and brokerage capital gains
